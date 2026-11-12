@@ -31,6 +31,7 @@ if(lastQ && /^(☐|•)/.test(t)){opts.push(t);continue}
 if(lastQ && /^(Rating scale|1 – Very|2 – Below|3 – Meets|4 – Good|5 – Excellent)/.test(t)){flush();out+=`<p class="hint">${esc(t)}</p>`;continue}
 if(lastQ && /^(Please|请|Rank 1)/.test(t)){flush();out+=`<p class="sub">${esc(t)}</p>`;continue}
 if(lastQ && t.length<150 && /\/$/.test(t)){continue}
+if(lastQ && /^[\u3400-\u9fff]/.test(t) && (opts.length || /^2C\.2\b/.test(lastQ.label) || /^(3\.6|3\.10|4\.1|4\.2|4\.7|6\.2|6\.3|6\.4)\b/.test(lastQ.label))){lastQ.label+=' / '+t;continue}
 if(lastQ){flush()}
 if(t.startsWith('Estimated completion')||t.startsWith('Objectives')||t.startsWith('Important')||t.startsWith('Please provide')||t.startsWith('Thank')||t.startsWith('请根据')||t.startsWith('感谢')||t.startsWith('Understand')||t.startsWith('Identify')||t.startsWith('Establish'))out+=`<p class="intro sub">${esc(t)}</p>`;
 else if(!/^(1 – Very|2 – Below|3 – Meets|4 – Good|5 – Excellent|Rating scale)/.test(t))out+=`<p class="sub">${esc(t)}</p>`;
@@ -40,7 +41,7 @@ document.addEventListener('input',e=>{const el=e.target;if(!el.dataset.key)retur
 document.addEventListener('change',e=>{const el=e.target;if(!el.dataset.key)return;if(el.type==='radio'){set(el.dataset.key,el.value);return}if(el.type==='checkbox'){const group=[...document.querySelectorAll('input[type=checkbox]')].filter(x=>x.dataset.key===el.dataset.key);let vals=group.filter(x=>x.checked).map(x=>x.value);const lim=Number(el.dataset.limit||0);if(lim&&vals.length>lim){el.checked=false;alert('Select a maximum of '+lim+' / 最多选择'+lim+'项');return}set(el.dataset.key,vals);return}set(el.dataset.key,el.value)});
 function move(d){index=Math.max(0,Math.min(sections.length-1,index+d));render();window.scrollTo({top:0,behavior:'instant'})}['prev','bottomprev'].forEach(id=>document.getElementById(id).onclick=()=>move(-1));['next','bottomnext'].forEach(id=>document.getElementById(id).onclick=()=>move(1));document.getElementById('save').onclick=()=>{save();alert('Saved in this browser / 已保存在此浏览器')};document.getElementById('export').onclick=()=>{save();const region=answers['s1_p0_q1']||'Unspecified';const payload={survey:'Eco-Shop RGM Expectations & Needs Assessment 2026',version:'Build 002',region,exportedAt:new Date().toISOString(),answers};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='EcoShop_RGM_'+String(region).replace(/[^a-z0-9]/gi,'_')+'_Survey_2026.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};document.getElementById('import').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const v=JSON.parse(await f.text());if(!v.answers||typeof v.answers!=='object')throw Error('Invalid file');if(!confirm('Replace current responses with imported answers?'))return;answers=v.answers;save();render()}catch(err){alert('Could not import: '+err.message)}};render();
 
-// Build 002: cross-origin HTML form transport with positive server acknowledgement.
+// Build 002.1: interactive option correction; cross-origin HTML form transport with positive server acknowledgement.
 const nameKey='ecoshop_rgm_name_2026';
 const nameEl=document.getElementById('rgmName');nameEl.value=localStorage.getItem(nameKey)||'';
 nameEl.addEventListener('input',()=>localStorage.setItem(nameKey,nameEl.value));
